@@ -1,0 +1,84 @@
+<assembly xmlns="http://maven.apache.org/ASSEMBLY/2.1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.1.0 http://maven.apache.org/xsd/assembly-2.1.0.xsd">
+    <!--设置此程序的id。这是此项目中特定文件集的符号名称。此外，除了用于通过将其值附加到生成的归档文件来明确地命名组装的包之外，在部署时，id用作工件的分类器。-->
+    <id>main</id>
+    <!--打包格式-->
+    <formats>
+        <format>zip</format>
+    </formats>
+    <!--
+        在最终归档中包含一个基本目录。例如，如果您正在创建一个名为“your-app”的程序集，则将includeBaseDirectory设置为true将创建一个包含此基本目录的归档文件。
+        如果此选项设置为false，则创建的存档将其内容解压缩到当前目录。默认值是：true。
+    -->
+    <includeBaseDirectory>true</includeBaseDirectory>
+    <!--
+        在最终档案中包含一个网站目录。项目的站点目录位置由Assembly Plugin的siteDirectory参数确定。默认值是：false。
+    -->
+    <includeSiteDirectory>false</includeSiteDirectory>
+
+    <!--指定包含在程序集中的每个包含模块的哪些文件组-->
+    <fileSets>
+        <fileSet>
+            <!--排除版本管理工具的元数据文件，.git等-->
+            <useDefaultExcludes>true</useDefaultExcludes>
+            <!--设置includes配置的文件的输出目录，相对于zip包的根目录-->
+            <outputDirectory>/</outputDirectory>
+
+            <!--设置寻找文件或者依赖的目录
+            <directory>${project.parent.basedir}</directory>
+            -->
+            <!--project.basedir = /Users/logan/Data/Code/my-demo2022/build-springboot-->
+            <directory>${project.basedir}</directory>
+            <!--打进zip包中包含的文件，相对于上一行配置的${directory}去寻找-->
+            <includes>
+                <!--不配置则拷贝所有文件-->
+                <include>doc/**/*</include>
+                <include>README*</include>
+                <include>LICENSE*</include>
+                <include>NOTICE*</include>
+                <include>global.json</include>
+                <include>sql/**</include>
+                <include>init/**</include>
+                <include>application*.yml</include>
+                <include>log4j2.xml</include>
+            </includes>
+        </fileSet>
+
+        <fileSet>
+            <outputDirectory>/site</outputDirectory>
+            <!--project.build.directory = /Users/logan/Data/Code/my-demo2022/build-springboot/target-->
+            <directory>${project.build.directory}/site</directory>
+        </fileSet>
+
+        <fileSet>
+            <outputDirectory>/</outputDirectory>
+            <directory>${project.basedir}/assembly</directory>
+            <!--把文件中配置的属性符号转为真实环境值-->
+            <filtered>true</filtered>
+            <!--设置文件权限 (User)(Group)(Other)，Read = 4, Write = 2, and Execute = 1 默认：0644-->
+            <fileMode>0755</fileMode>
+            <!--设置换行符-->
+            <lineEnding>unix</lineEnding>
+            <includes>
+                <include>*.sh</include>
+            </includes>
+        </fileSet>
+
+        <!--拷贝spring-boot-maven-plugin生成的jar包-->
+        <fileSet>
+            <outputDirectory>/</outputDirectory>
+            <directory>${project.basedir}/target/</directory>
+            <includes>
+                <include>build-*.jar</include>
+            </includes>
+            <excludes>
+                <exclude>build-*-single.jar</exclude>
+            </excludes>
+        </fileSet>
+
+        <fileSet>
+            <directory>${project.basedir}/i18n</directory>
+            <outputDirectory>i18n</outputDirectory>
+        </fileSet>
+    </fileSets>
+</assembly>

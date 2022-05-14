@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>springboot-parent-child-build</artifactId>
+        <groupId>org.example</groupId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>build</artifactId>
+
+    <properties>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.example</groupId>
+            <artifactId>user-service</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+    </dependencies>
+
+
+    <!--配置git仓库 在生成buildNumber时需要-->
+    <scm>
+        <url>git@github.com:qinheJ/springboot-parent-child.git</url>
+        <connection>scm:git:ssh://github.com:qinheJ/springboot-parent-child.git</connection>
+    </scm>
+
+    <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <includes>
+                    <include>**/*</include>
+                </includes>
+                <excludes>
+                    <!--在jar包中把私密文件排除-->
+                    <exclude>default.lic</exclude>
+                </excludes>
+            </resource>
+        </resources>
+        <plugins>
+            <!--编译设置-->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.10.1</version>
+                <configuration>
+                    <source>1.8</source> <!-- 源代码使用jdk1.8支持的特性 -->
+                    <target>1.8</target> <!-- 使用jvm1.8编译目标代码 -->
+                    <encoding>utf-8</encoding> <!-- 编码 -->
+                    <skip>true</skip>
+                    <showWarnings>true</showWarnings>
+                    <meminitial>512m</meminitial> <!-- 编译器使用的初始内存 -->
+                    <maxmem>512m</maxmem>  <!-- 编译器使用的最大内存 -->
+                    <compilerArgs> <!-- 传递参数 -->
+                        <arg>-Xlint:unchecked</arg><!--启用对未经检查的转换的警告   Map map = new HashMap();
+                                                         map.put("a", new A());-->
+                        <arg>-Xlint:deprecation</arg><!--显示关于使用了过时的 API 的详细信息-->
+                    </compilerArgs>
+                </configuration>
+            </plugin>
+
+            <!--生成版本号 在 ${buildNumber}中-->
+            <!--executions部分表示在maven的validate阶段执行此插件的create goal。
+            shortRevisionLength部分用来指定获取SCM版本号的长度，
+            比如git revision为b0c1c69be579175e63eeb1c056d607f01ab61e96，那么此示例中只获取后7位，也就是ab61e96。
+            doCheck设置为false表示不检查是否本地有文件被修改过。如果设置为true，一旦本地有文件被修改，那么构建就会失败。
+            doUpdate表示是否跟新本地的repository，false 表示不跟新。-->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>buildnumber-maven-plugin</artifactId>
+                <version>1.2</version>
+                <executions>
+                    <execution>
+                        <id>generate-timestamp</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>create-timestamp</goal>
+                        </goals>
+                        <configuration>
+                            <timestampPropertyName>buildTime</timestampPropertyName>
+                            <timestampFormat>YYYYMMddHHmmss</timestampFormat>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <id>generate-buildNumber</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>create</goal>
+                        </goals>
+                        <configuration>
+                            <buildNumberPropertyName>buildNumber</buildNumberPropertyName>
+                            <doUpdate>false</doUpdate>
+                            <shortRevisionLength>7</shortRevisionLength>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!--打印一个变量-->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.0.0</version>
+                <executions>
+                    <execution>
+                        <phase>validate</phase>
+                        <configuration>
+                            <target>
+                                <echo message="hello ant, from Maven!"/>
+                                <echo message="${project.basedir}"/><!--/Users/logan/Data/Code/my-demo2022/build-springboot-->
+                                <echo message="${project.build.directory}"/><!--/Users/logan/Data/Code/my-demo2022/build-springboot/target-->
+                                <!--suppress UnresolvedMavenProperty -->
+                                <echo>buildNumber:${buildNumber}</echo>
+                                <!--suppress UnresolvedMavenProperty -->
+                                <echo>buildTime:${buildTime}</echo>
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!--打包插件-->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>single</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <phase>package</phase>
+                        <configuration>
+                            <!--执行第二次打jar包，在默认生成的jar包名后面加上single，即生成两个相同的jar包-->
+                            <!--如果没有classifier则会只打默认的jar包-->
+                            <!--因为spring-boot-maven-plugin创建springboot启动包时，会修改原始jar包的名字
+                            所以classifier配置就是为了保留原始jar包-->
+                            <classifier>single</classifier>
+                        </configuration>
+                    </execution>
+                </executions>
+                <!--设置生成的jar包里META-INF/MANIFEST.MF 清单文件里的内容-->
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                        </manifest>
+                        <manifestEntries>
+                            <!--suppress UnresolvedMavenProperty -->
+                            <Implementation-Build>${buildNumber}</Implementation-Build>
+                        </manifestEntries>
+                        <addMavenDescriptor>false</addMavenDescriptor>
+                    </archive>
+                    <excludes>
+                        <!--在jar包中把配置文件排除，后面放在jar外部-->
+                        <exclude>application*.yml</exclude>
+                        <exclude>log4j2.xml</exclude>
+                        <exclude>default.lic</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+
+            <!--打源码包-->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.0.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!--springboot插件-->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>com.example.Application</mainClass>
+                    <layout>ZIP</layout>
+                    <!-- 测试 layout=zip时，jar中排除某些包，放在jar包外某个目录里(./lib/)，
+                    用java -Dloader.path=./lib -jar build-springboot-1.0-SNAPSHOT.jar方式引用
+                    <excludes>
+                        <exclude>
+                            <groupId>org.springframework</groupId>
+                            <artifactId>spring-webmvc</artifactId>
+                        </exclude>
+                    </excludes>
+                    -->
+
+                    <!--也可以用这种方式将原jar包和springboot生成的jar区分开，
+                    springboot插件生成的jar包名会加这个后缀，并且原jar包名字不会被修改成.original
+                    assembly.xml配置也要做相应修改
+                    <classifier>exec</classifier>
+                    -->
+
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!--打zip包-->
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <!--zip包名字-->
+                    <finalName>my-build-${project.version}</finalName>
+                    <!-- true：会在生成的zip包名后面加上assembly.xml中配置的id-->
+                    <appendAssemblyId>false</appendAssemblyId>
+                    <!-- 使用官方的打包策略
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                    -->
+                    <!--使用自定义打包策略-->
+                    <descriptors>
+                        <descriptor>assembly/assembly.xml</descriptor>
+                    </descriptors>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-my-jar-with-dependencies</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <!--project.version控制发布的版本
+        active.profile控制是否SNAPSHOT
+        在打包的时候 可以加上  -P profile.id
+    -->
+    <profiles>
+        <profile>
+            <id>dev</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <active.profile>-SNAPSHOT</active.profile>
+            </properties>
+        </profile>
+        <profile>
+            <id>prod</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <properties>
+                <active.profile/>
+            </properties>
+        </profile>
+    </profiles>
+
+</project>
