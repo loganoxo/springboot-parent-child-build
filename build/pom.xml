@@ -223,21 +223,6 @@
             <!--打zip包-->
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <configuration>
-                    <!--zip包名字-->
-                    <finalName>my-build-${project.version}</finalName>
-                    <!-- true：会在生成的zip包名后面加上assembly.xml中配置的id-->
-                    <appendAssemblyId>false</appendAssemblyId>
-                    <!-- 使用官方的打包策略
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
-                    -->
-                    <!--使用自定义打包策略-->
-                    <descriptors>
-                        <descriptor>assembly/assembly.xml</descriptor>
-                    </descriptors>
-                </configuration>
                 <executions>
                     <execution>
                         <id>make-my-jar-with-dependencies</id>
@@ -245,6 +230,22 @@
                         <goals>
                             <goal>single</goal>
                         </goals>
+
+                        <configuration>
+                            <!--zip包名字-->
+                            <finalName>my-build-${project.version}</finalName>
+                            <!-- true：会在生成的zip包名后面加上assembly.xml中配置的id-->
+                            <appendAssemblyId>false</appendAssemblyId>
+                            <!-- 使用官方的打包策略
+                            <descriptorRefs>
+                                <descriptorRef>jar-with-dependencies</descriptorRef>
+                            </descriptorRefs>
+                            -->
+                            <!--使用自定义打包策略-->
+                            <descriptors>
+                                <descriptor>assembly/assembly.xml</descriptor>
+                            </descriptors>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
